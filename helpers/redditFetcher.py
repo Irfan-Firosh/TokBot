@@ -2,11 +2,7 @@ import os
 import requests
 from typing import List, Dict, Optional
 from datetime import datetime
-import time
-from dotenv import load_dotenv
-
-# Load environment variables
-load_dotenv()
+from helpers.sheetsLogger import SheetsLogger
 
 class RedditPostExtractor:
     """
@@ -20,7 +16,7 @@ class RedditPostExtractor:
         self.client_id = os.getenv('REDDIT_CLIENT_ID')
         self.client_secret = os.getenv('REDDIT_CLIENT_SECRET')
         self.user_agent = 'RedditPostExtractor/1.0'
-        
+        self.sheetsLogger = SheetsLogger() 
         if not self.client_id or not self.client_secret:
             raise ValueError("REDDIT_CLIENT_ID and REDDIT_CLIENT_SECRET must be set in .env file")
         
@@ -181,6 +177,13 @@ class RedditPostExtractor:
                 filtered_posts.append(post)
         
         return filtered_posts
+    
+    def filter_used_posts(self, posts: List[Dict]) -> List[Dict]:
+        """
+        Filter posts that have already been used.
+        """
+        used_post_ids = self.sheetsLogger.get_ids_set()
+        return [post for post in posts if post.get('id') not in used_post_ids]  
 
     
     def get_top_posts_by_rating(self, subreddit: str, limit: int = 25, 
@@ -188,10 +191,11 @@ class RedditPostExtractor:
                                min_comments: int = 10, min_body_length: int = 100, max_body_length: int = 1000) -> List[Dict]:
         """
         Get top posts from a subreddit with comprehensive rating filters.
+        Fetches posts until we have enough that meet all criteria.
         
         Args:
             subreddit: Name of the subreddit to fetch posts from
-            limit: Maximum number of posts to fetch
+            limit: Maximum number of posts to return (will fetch more to ensure we get enough)
             min_score: Minimum score threshold
             min_ratio: Minimum upvote ratio threshold
             min_comments: Minimum number of comments required
@@ -200,19 +204,48 @@ class RedditPostExtractor:
         Returns:
             List of high-quality posts meeting all criteria
         """
-        posts = self.get_posts(subreddit, limit)
+        all_posts = []
+        fetch_limit = min(limit * 3, 100)
+        max_fetch_attempts = 5
+        current_fetch = 0
         
-        # Apply multiple filters
-        posts = self.filter_posts_by_score(posts, min_score)
-        posts = self.filter_posts_by_ratio(posts, min_ratio)
-        posts = self.filter_posts_by_comments(posts, min_comments)
-        posts = self.filter_posts_by_body_length(posts, min_body_length, max_body_length)
-        posts = self.filter_posts_by_nsfw(posts, False)
+        while len(all_posts) < limit and current_fetch < max_fetch_attempts:
+            current_fetch += 1
+            
+            new_posts = self.get_posts(subreddit, fetch_limit)
+            
+            if not new_posts:
+                break
+            
+            # Apply filters to new posts
+            filtered_posts = self.filter_posts_by_score(new_posts, min_score)
+            filtered_posts = self.filter_posts_by_ratio(filtered_posts, min_ratio)
+            filtered_posts = self.filter_posts_by_comments(filtered_posts, min_comments)
+            filtered_posts = self.filter_posts_by_body_length(filtered_posts, min_body_length, max_body_length)
+            filtered_posts = self.filter_posts_by_nsfw(filtered_posts, False)
+            filtered_posts = self.filter_used_posts(filtered_posts)
+            
+            # Add new filtered posts to our collection
+            all_posts.extend(filtered_posts)
+            
+            # Remove duplicates based on post ID
+            seen_ids = set()
+            unique_posts = []
+            for post in all_posts:
+                if post['id'] not in seen_ids:
+                    seen_ids.add(post['id'])
+                    unique_posts.append(post)
+            all_posts = unique_posts
+            
+            if len(all_posts) >= limit:
+                break
+            
+            fetch_limit = min(int(fetch_limit * 1.5), 100)
         
-        # Sort by score in descending order
-        posts.sort(key=lambda x: x.get('score', 0), reverse=True)
+        all_posts.sort(key=lambda x: x.get('score', 0), reverse=True)
+        result = all_posts[:limit]
         
-        return posts
+        return result
     
     def _parse_post(self, post_data: Dict) -> Dict:
         """

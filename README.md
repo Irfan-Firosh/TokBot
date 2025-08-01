@@ -1,14 +1,15 @@
-# Reddit Post Extractor
+# TokBot
 
-A Python tool to extract and filter Reddit posts based on various rating criteria including score, upvote ratio, and comment count.
+A comprehensive Python tool for automating content creation and distribution. TokBot fetches viral Reddit posts, generates audio narration, creates formatted images, and uploads content to TikTok.
 
 ## Features
 
-- **Authentication**: Secure Reddit API authentication using client credentials
-- **Flexible Filtering**: Filter posts by score, upvote ratio, and comment count
-- **Multiple Time Filters**: Fetch posts from different time periods (hour, day, week, month, year, all)
-- **Comprehensive Post Data**: Extract detailed post information including metadata
-- **Easy to Use**: Simple class-based interface with clear documentation
+- **Reddit Content Extraction**: Fetch viral posts from multiple subreddits with advanced filtering
+- **Audio Generation**: Convert Reddit post text to speech using Cartesia TTS API
+- **Image Generation**: Create formatted images with Reddit post titles and subreddit names
+- **TikTok Upload**: Automatically upload generated content to TikTok
+- **Google Sheets Logging**: Track processed posts and their performance metrics
+- **Flexible Configuration**: Environment-based configuration for all API keys and settings
 
 ## Setup
 
@@ -18,66 +19,125 @@ A Python tool to extract and filter Reddit posts based on various rating criteri
 pip install -r requirements.txt
 ```
 
-### 2. Reddit API Setup
+### 2. Environment Configuration
+
+Create a `.env` file in the project root with your API credentials:
+
+```env
+# Reddit API Configuration
+REDDIT_CLIENT_ID=your_reddit_client_id_here
+REDDIT_CLIENT_SECRET=your_reddit_client_secret_here
+
+# TikTok Configuration
+TIKTOK_SESSION_ID=your_tiktok_session_id_here
+
+# Cartesia TTS API Configuration
+CARTESIA_API_KEY=your_cartesia_api_key_here
+CARTESIA_VOICE_ID=your_cartesia_voice_id_here
+
+# Google Sheets Configuration (optional)
+GOOGLE_SHEETS_CREDENTIALS_FILE=path_to_your_credentials.json
+GOOGLE_SHEET_ID=your_google_sheet_id_here
+
+# Content Generation Settings
+VIRAL_POST_LIMIT=25
+VIRAL_MIN_SCORE=100
+VIRAL_MIN_RATIO=0.8
+VIRAL_MIN_COMMENTS=10
+VIRAL_TIME_FILTER=day
+VIRAL_MIN_BODY_LENGTH=100
+VIRAL_MAX_BODY_LENGTH=1000
+STORYTELLING_SUBREDDITS=tifu,AmItheAsshole,relationship_advice,MaliciousCompliance,entitledparents
+```
+
+### 3. Reddit API Setup
 
 1. Go to https://www.reddit.com/prefs/apps
 2. Click "Create App" or "Create Another App"
 3. Fill in the details:
-   - **Name**: Your app name (e.g., "RedditPostExtractor")
+   - **Name**: Your app name (e.g., "TokBot")
    - **Type**: Select "script"
    - **Description**: Optional description
    - **About URL**: Can be left blank
    - **Redirect URI**: Use `http://localhost:8080`
 4. After creating, note down the **Client ID** (under the app name) and **Client Secret**
 
-### 3. Environment Configuration
+### 4. TikTok Session ID Setup
 
-Create a `.env` file in the project root with your Reddit API credentials:
+To get your TikTok session ID:
 
-```env
-REDDIT_CLIENT_ID=your_client_id_here
-REDDIT_CLIENT_SECRET=your_client_secret_here
-```
+1. Log in to your TikTok account
+2. Go to https://www.tiktok.com/
+3. Press the F12 key on your keyboard
+4. Go to Application > Storage > Cookies
+5. Find the value of the `sessionid` cookie
+6. You should have something like this: `7a9f3c5d8f6e4b2a1c9d8e7f6a5b4c3d`
+
+### 5. Cartesia TTS API Setup
+
+1. Sign up for Cartesia TTS API at https://cartesia.ai/
+2. Get your API key and voice ID
+3. Add them to your `.env` file
 
 ## Usage
 
-### Basic Usage
+### Basic TikTok Upload
 
 ```python
-from helpers.fetcher import RedditPostExtractor
+from helpers.tiktokUploader import uploadVideo
+import os
+from dotenv import load_dotenv
 
-# Initialize the extractor
-extractor = RedditPostExtractor()
+load_dotenv()
 
-# Get high-quality posts from r/Python
-posts = extractor.get_top_posts_by_rating(
-    subreddit='Python',
-    limit=10,
-    min_score=50,
-    min_ratio=0.85,
-    min_comments=5
+uploadVideo(
+    session_id=os.getenv("TIKTOK_SESSION_ID"),
+    video_path="path/to/your/video.mp4",
+    title="Your Video Title",
+    tags=["tiktok", "funny", "viral"],
+    schedule_time=0,  # 0 for immediate upload
 )
-
-# Print the results
-extractor.print_posts_summary(posts)
 ```
 
-### Advanced Filtering
+### Reddit Content Generation
 
 ```python
-# Get all posts first
-all_posts = extractor.get_posts('programming', limit=25)
+from generators.redditGenerator import RedditGenerator
 
-# Apply custom filters
-high_score_posts = extractor.filter_posts_by_score(all_posts, min_score=100)
-viral_posts = extractor.filter_posts_by_ratio(all_posts, min_ratio=0.9)
-active_posts = extractor.filter_posts_by_comments(all_posts, min_comments=20)
+# Initialize the generator
+generator = RedditGenerator()
+
+# Fetch and process viral Reddit posts
+generator.fetch_reddit_posts()
 ```
 
-### Running the Example
+### Running the Main Application
 
 ```bash
 python main.py
+```
+
+## Project Structure
+
+```
+TokBot/
+├── generators/
+│   ├── __init__.py
+│   └── redditGenerator.py          # Main content generation logic
+├── helpers/
+│   ├── __init__.py
+│   ├── audioHandler.py            # TTS audio generation
+│   ├── formatRedditpost.py        # Image generation with templates
+│   ├── redditFetcher.py           # Reddit API integration
+│   ├── sheetsLogger.py            # Google Sheets logging
+│   ├── tiktokUploader.py          # TikTok upload functionality
+│   └── youtubeFetcher.py          # YouTube integration (future)
+├── public/
+│   ├── reddit-template.png        # Image template for Reddit posts
+│   └── redditTemplate.png
+├── main.py                        # Main application entry point
+├── requirements.txt               # Python dependencies
+└── README.md
 ```
 
 ## API Reference
@@ -93,57 +153,59 @@ python main.py
 - `filter_posts_by_comments(posts, min_comments=0)`: Filter by comment count
 - `print_posts_summary(posts)`: Display formatted post information
 
-#### Post Data Structure
+### ImageGenerator Class
 
-Each post contains:
-- `id`: Reddit post ID
-- `title`: Post title
-- `author`: Post author username
-- `score`: Net score (upvotes - downvotes)
-- `upvote_ratio`: Percentage of upvotes (0.0 to 1.0)
-- `num_comments`: Number of comments
-- `url`: Original post URL
-- `permalink`: Reddit permalink
-- `created_utc`: Post creation timestamp
-- `subreddit`: Subreddit name
-- `is_self`: Whether it's a text post
-- `selftext`: Post text content
-- `domain`: Domain of linked content
-- `over_18`: NSFW flag
-- `spoiler`: Spoiler flag
-- `stickied`: Whether post is stickied
+#### Methods
 
-## Examples
+- `add_text_to_image(subreddit, post_title, output_path)`: Create formatted images with Reddit content
+- `load_template()`: Load the template image for formatting
 
-### Get Viral Posts
-```python
-viral_posts = extractor.get_top_posts_by_rating(
-    subreddit='technology',
-    limit=15,
-    min_score=1000,
-    min_ratio=0.9,
-    min_comments=20
-)
-```
+### VoiceGenerator Class
 
-### Get Recent Quality Posts
-```python
-recent_posts = extractor.get_posts('Python', limit=10, time_filter='week')
-quality_posts = extractor.filter_posts_by_score(recent_posts, min_score=25)
-```
+#### Methods
+
+- `generate_audio(transcript, output_path)`: Convert text to speech using Cartesia TTS
+- `generate_srt_from_timestamps(timestamps_list, output_path)`: Generate SRT subtitle files
+
+### TikTok Uploader
+
+#### Functions
+
+- `uploadVideo(session_id, video, title, tags, schedule_time=0)`: Upload video to TikTok
+
+## Configuration Options
+
+### Content Filtering
+
+- `VIRAL_POST_LIMIT`: Number of posts to fetch per subreddit
+- `VIRAL_MIN_SCORE`: Minimum Reddit score threshold
+- `VIRAL_MIN_RATIO`: Minimum upvote ratio (0.0 to 1.0)
+- `VIRAL_MIN_COMMENTS`: Minimum comment count
+- `VIRAL_TIME_FILTER`: Time period for posts ('hour', 'day', 'week', 'month', 'year', 'all')
+- `VIRAL_MIN_BODY_LENGTH`: Minimum post text length
+- `VIRAL_MAX_BODY_LENGTH`: Maximum post text length
+- `STORYTELLING_SUBREDDITS`: Comma-separated list of subreddits to monitor
 
 ## Error Handling
 
-The extractor includes comprehensive error handling for:
+The application includes comprehensive error handling for:
 - Missing environment variables
-- Authentication failures
-- API request errors
-- Invalid parameters
+- API authentication failures
+- Network request errors
+- File processing errors
+- TikTok upload failures
 
 ## Rate Limiting
 
-Reddit API has rate limits. The extractor respects these limits and will throw appropriate exceptions if limits are exceeded.
+All APIs (Reddit, TikTok, Cartesia) have rate limits. The application respects these limits and includes appropriate error handling.
+
+## Dependencies
+
+- `requests>=2.31.0`: HTTP requests
+- `python-dotenv>=1.0.0`: Environment variable management
+- `Pillow>=10.0.0`: Image processing
+- `sseclient-py>=1.7.2`: Server-sent events for TTS streaming
 
 ## License
 
-This project is open source and available under the MIT License. # TokBot
+This project is open source and available under the MIT License.

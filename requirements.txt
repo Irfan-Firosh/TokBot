@@ -1,4 +1,7 @@
 requests>=2.31.0
 python-dotenv>=1.0.0
 Pillow>=10.0.0
-sseclient-py>=1.7.2 
+sseclient-py>=1.7.2
+dropbox>=11.36.0
+gspread>=5.12.0
+google-auth>=2.23.0 

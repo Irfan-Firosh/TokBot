@@ -1,13 +1,14 @@
-import os
-import json
 from dotenv import load_dotenv
-from generators.redditGenerator import RedditGenerator
+from helpers.dropboxUploader import DropboxUploader
+
 load_dotenv()
 
 
 def main():
-    reddit_generator = RedditGenerator()
-    reddit_generator.fetch_reddit_posts()
+    dropboxUploader = DropboxUploader()
+    file_path = "Most embarassing moments.mp4"
+    file_name = "Most embarassing moments.mp4"
+    dropboxUploader.upload_file(file_path, file_name)
 
 if __name__ == "__main__":
     main()

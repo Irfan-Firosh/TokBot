@@ -27,6 +27,9 @@ class SheetsLogger:
         self.sheet = self.client.open_by_key(os.getenv("GOOGLE_SHEET_ID"))
         self.sheet = self.sheet.sheet1
     
+    def get_ids_set(self):
+        return set([row[1] for row in self.sheet.get_all_values()[1:]])
+    
     def format_data(self, post_id: str, post_title: str, post_url: str, post_score: int):
         return [
             datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
@@ -41,6 +44,8 @@ class SheetsLogger:
 
     def append_row(self, post_id: str, post_title: str, post_url: str, post_score: int):
         self.sheet.append_row(self.format_data(post_id, post_title, post_url, post_score))
+
+    
     
 
 
