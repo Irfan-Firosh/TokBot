@@ -7,7 +7,8 @@ A comprehensive Python tool for automating content creation and distribution. To
 - **Reddit Content Extraction**: Fetch viral posts from multiple subreddits with advanced filtering
 - **Audio Generation**: Convert Reddit post text to speech using Cartesia TTS API
 - **Image Generation**: Create formatted images with Reddit post titles and subreddit names
-- **TikTok Upload**: Automatically upload generated content to TikTok
+- **Dropbox Upload**: Automatically upload final videos to Dropbox for storage and distribution
+- **Zapier Integration**: Seamless integration with Buffer for automated social media scheduling
 - **Google Sheets Logging**: Track processed posts and their performance metrics
 - **Flexible Configuration**: Environment-based configuration for all API keys and settings
 
@@ -34,6 +35,10 @@ TIKTOK_SESSION_ID=your_tiktok_session_id_here
 # Cartesia TTS API Configuration
 CARTESIA_API_KEY=your_cartesia_api_key_here
 CARTESIA_VOICE_ID=your_cartesia_voice_id_here
+
+# Dropbox Configuration
+DROPBOX_ACCESS_TOKEN=your_dropbox_access_token_here
+DROPBOX_ROOT_FOLDER=your_dropbox_folder_path
 
 # Google Sheets Configuration (optional)
 GOOGLE_SHEETS_CREDENTIALS_FILE=path_to_your_credentials.json
@@ -79,7 +84,45 @@ To get your TikTok session ID:
 2. Get your API key and voice ID
 3. Add them to your `.env` file
 
+### 6. Dropbox Setup
+
+1. Go to https://www.dropbox.com/developers/apps
+2. Create a new app or use an existing one
+3. In the app settings, go to the "Permissions" tab
+4. Enable the `files.content.write` scope for file uploads
+5. Generate an access token in the "Settings" tab
+6. Add the token and your desired folder path to your `.env` file
+
+### 7. Zapier Integration Setup
+
+TokBot integrates with Zapier to automatically schedule content on Buffer when new videos are uploaded to Dropbox. The workflow is:
+
+1. **Dropbox Trigger**: New file uploaded to your specified Dropbox folder
+2. **Buffer Action**: Automatically adds the video to your Buffer queue for scheduling
+
+![Zapier Workflow](zapier-workflow.png)
+
+To set up this integration:
+1. Create a Zapier account at https://zapier.com/
+2. Create a new Zap with Dropbox as the trigger (New File in Folder)
+3. Connect Buffer as the action (Add to Queue)
+4. Configure the integration to monitor your Dropbox folder
+5. Test and activate the Zap
+
 ## Usage
+
+### Basic Dropbox Upload
+
+```python
+from helpers.dropboxUploader import DropboxUploader
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+uploader = DropboxUploader()
+uploader.upload_file("path/to/your/video.mp4", "video.mp4")
+```
 
 ### Basic TikTok Upload
 
@@ -127,6 +170,7 @@ TokBot/
 ├── helpers/
 │   ├── __init__.py
 │   ├── audioHandler.py            # TTS audio generation
+│   ├── dropboxUploader.py         # Dropbox upload functionality
 │   ├── formatRedditpost.py        # Image generation with templates
 │   ├── redditFetcher.py           # Reddit API integration
 │   ├── sheetsLogger.py            # Google Sheets logging
@@ -167,6 +211,13 @@ TokBot/
 - `generate_audio(transcript, output_path)`: Convert text to speech using Cartesia TTS
 - `generate_srt_from_timestamps(timestamps_list, output_path)`: Generate SRT subtitle files
 
+### Dropbox Uploader
+
+#### Methods
+
+- `upload_file(file_path, file_name)`: Upload a single file to Dropbox
+- `batch_upload_files(file_paths, file_names)`: Upload multiple files to Dropbox
+
 ### TikTok Uploader
 
 #### Functions
@@ -205,6 +256,9 @@ All APIs (Reddit, TikTok, Cartesia) have rate limits. The application respects t
 - `python-dotenv>=1.0.0`: Environment variable management
 - `Pillow>=10.0.0`: Image processing
 - `sseclient-py>=1.7.2`: Server-sent events for TTS streaming
+- `dropbox>=11.36.0`: Dropbox API integration
+- `gspread>=5.12.0`: Google Sheets API integration
+- `google-auth>=2.23.0`: Google authentication
 
 ## License
 
