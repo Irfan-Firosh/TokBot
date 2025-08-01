@@ -100,7 +100,7 @@ TokBot integrates with Zapier to automatically schedule content on Buffer when n
 1. **Dropbox Trigger**: New file uploaded to your specified Dropbox folder
 2. **Buffer Action**: Automatically adds the video to your Buffer queue for scheduling
 
-![Zapier Workflow](zapier-workflow.png)
+![Zapier Workflow](public/zapier-workflow.png)
 
 To set up this integration:
 1. Create a Zapier account at https://zapier.com/
