@@ -1,14 +1,12 @@
 from dotenv import load_dotenv
-from helpers.dropboxUploader import DropboxUploader
+from helpers.formatRedditpost import ImageGenerator
 
 load_dotenv()
 
 
 def main():
-    dropboxUploader = DropboxUploader()
-    file_path = "Most embarassing moments.mp4"
-    file_name = "Most embarassing moments.mp4"
-    dropboxUploader.upload_file(file_path, file_name)
+    imageGenerator = ImageGenerator()
+    imageGenerator.add_text_to_image("askReddit", "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.")
 
 if __name__ == "__main__":
     main()

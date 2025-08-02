@@ -36,5 +36,3 @@ class RedditGenerator:
                 self.sheets_logger.append_row(post["id"], post["title"], post["url"], post["score"])
                 self.image_generator.add_text_to_image(post["subreddit"], post["title"], f"output-{post['id']}/reddit.png")
                 self.voice_generator.generate_audio(post["selftext"], f"output-{post['id']}/audio.wav")
-                # remove below only for testing
-                break
