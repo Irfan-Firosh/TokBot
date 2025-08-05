@@ -1,4 +1,4 @@
-from PIL import Image, ImageDraw, ImageFont, os
+from PIL import Image, ImageDraw, ImageFont
 import os
 from typing import Tuple, Optional
 
@@ -76,7 +76,7 @@ class ImageGenerator:
         
         img.save(output_path)
         
-        return output_path
+        return output_path, post_title
     
     def _draw_wrapped_text(
         self, 

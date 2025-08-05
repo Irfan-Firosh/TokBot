@@ -1,12 +1,14 @@
 # TokBot
 
-A comprehensive Python tool for automating content creation and distribution. TokBot fetches viral Reddit posts, generates audio narration, creates formatted images, and uploads content to TikTok.
+A comprehensive Python tool for automating content creation and distribution. TokBot fetches viral Reddit posts, generates audio narration, creates formatted images, compiles videos with subtitles, and uploads content to TikTok.
 
 ## Features
 
 - **Reddit Content Extraction**: Fetch viral posts from multiple subreddits with advanced filtering
 - **Audio Generation**: Convert Reddit post text to speech using Cartesia TTS API
 - **Image Generation**: Create formatted images with Reddit post titles and subreddit names
+- **Video Compilation**: Compile videos with background footage, audio, and text overlays
+- **Subtitle Generation**: Generate and overlay subtitles with dynamic positioning
 - **Dropbox Upload**: Automatically upload final videos to Dropbox for storage and distribution
 - **Zapier Integration**: Seamless integration with Buffer for automated social media scheduling
 - **Google Sheets Logging**: Track processed posts and their performance metrics
@@ -40,9 +42,14 @@ CARTESIA_VOICE_ID=your_cartesia_voice_id_here
 DROPBOX_ACCESS_TOKEN=your_dropbox_access_token_here
 DROPBOX_ROOT_FOLDER=your_dropbox_folder_path
 
-# Google Sheets Configuration (optional)
-GOOGLE_SHEETS_CREDENTIALS_FILE=path_to_your_credentials.json
+# Google Sheets Configuration
+GOOGLE_CREDENTIALS_JSON=your_google_service_account_json
 GOOGLE_SHEET_ID=your_google_sheet_id_here
+
+# Font Configuration
+SUBREDDIT_FONT_PATH="/path/to/your/font.ttf"
+TITLE_FONT_PATH="/path/to/your/font.ttf"
+SUBTITLE_FONT_PATH="/path/to/your/font.ttf"
 
 # Content Generation Settings
 VIRAL_POST_LIMIT=25
@@ -93,7 +100,21 @@ To get your TikTok session ID:
 5. Generate an access token in the "Settings" tab
 6. Add the token and your desired folder path to your `.env` file
 
-### 7. Zapier Integration Setup
+### 7. Google Sheets Setup
+
+1. Create a Google Cloud Project
+2. Enable Google Sheets API
+3. Create a service account and download the JSON credentials
+4. Share your Google Sheet with the service account email
+5. Add the credentials JSON and sheet ID to your `.env` file
+
+### 8. Font Setup
+
+1. Download your preferred fonts (TTF format)
+2. Update the font paths in your `.env` file
+3. Recommended fonts: Poppins, Roboto, or similar modern fonts
+
+### 9. Zapier Integration Setup
 
 TokBot integrates with Zapier to automatically schedule content on Buffer when new videos are uploaded to Dropbox. The workflow is:
 
@@ -111,10 +132,42 @@ To set up this integration:
 
 ## Usage
 
+### Complete Workflow
+
+```python
+from generators.redditGenerator import RedditGenerator
+
+# Initialize the generator
+generator = RedditGenerator()
+
+# This will:
+# 1. Fetch viral Reddit posts
+# 2. Generate audio narration
+# 3. Create formatted images
+# 4. Compile videos with subtitles
+# 5. Log to Google Sheets
+generator.fetch_reddit_posts()
+```
+
+### Video Compilation with Subtitles
+
+```python
+from helpers.video.subtitleGenerator import add_subtitles
+
+# Add subtitles to a compiled video
+add_subtitles(
+    file_path="output-1mhu024",  # Folder containing video files
+    output_path="output/compiled_with_subtitles.mp4",
+    max_words=5,  # Max words per subtitle group
+    max_gap=0.5,  # Max gap between subtitles to group them
+    initial_position_duration=5.0  # Seconds before subtitles move to center
+)
+```
+
 ### Basic Dropbox Upload
 
 ```python
-from helpers.dropboxUploader import DropboxUploader
+from helpers.uploaders.dropboxUploader import DropboxUploader
 import os
 from dotenv import load_dotenv
 
@@ -142,18 +195,6 @@ uploadVideo(
 )
 ```
 
-### Reddit Content Generation
-
-```python
-from generators.redditGenerator import RedditGenerator
-
-# Initialize the generator
-generator = RedditGenerator()
-
-# Fetch and process viral Reddit posts
-generator.fetch_reddit_posts()
-```
-
 ### Running the Main Application
 
 ```bash
@@ -170,19 +211,50 @@ TokBot/
 ├── helpers/
 │   ├── __init__.py
 │   ├── audioHandler.py            # TTS audio generation
-│   ├── dropboxUploader.py         # Dropbox upload functionality
-│   ├── formatRedditpost.py        # Image generation with templates
-│   ├── redditFetcher.py           # Reddit API integration
-│   ├── sheetsLogger.py            # Google Sheets logging
+│   ├── uploaders/
+│   │   ├── dropboxUploader.py     # Dropbox upload functionality
+│   │   └── sheetsLogger.py        # Google Sheets logging
+│   ├── reddit/
+│   │   ├── formatRedditpost.py    # Image generation with templates
+│   │   └── redditFetcher.py       # Reddit API integration
+│   ├── video/
+│   │   ├── audioHandler.py        # Audio processing
+│   │   ├── footageFetcher.py      # YouTube footage downloading
+│   │   ├── subtitleGenerator.py   # Subtitle generation and overlay
+│   │   └── videoEditor.py         # Video compilation
 │   ├── tiktokUploader.py          # TikTok upload functionality
-│   └── youtubeFetcher.py          # YouTube integration (future)
+│   └── youtubeFetcher.py          # YouTube integration
 ├── public/
-│   ├── reddit-template.png        # Image template for Reddit posts
-│   └── redditTemplate.png
+│   ├── redditTemplate.png         # Image template for Reddit posts
+│   └── zapier-workflow.png        # Zapier workflow diagram
 ├── main.py                        # Main application entry point
 ├── requirements.txt               # Python dependencies
 └── README.md
 ```
+
+## Complete Workflow
+
+### 1. Content Discovery
+- Fetches viral posts from configured subreddits
+- Applies comprehensive filtering (score, ratio, comments, body length)
+- Tracks used posts to avoid duplicates
+
+### 2. Content Processing
+- **Audio Generation**: Converts post text to speech using Cartesia TTS
+- **Image Creation**: Generates formatted images with post title and subreddit
+- **Footage Download**: Downloads background footage from YouTube
+- **Video Compilation**: Combines audio, image, and footage into final video
+
+### 3. Subtitle Generation
+- **SRT Creation**: Generates subtitle files from audio timestamps
+- **Subtitle Grouping**: Groups short subtitles for better readability
+- **Dynamic Positioning**: Subtitles start in bottom position, then move to center
+- **Styling**: Rounded rectangle background with custom fonts
+
+### 4. Distribution
+- **Google Sheets Logging**: Records all processed posts with metadata
+- **Dropbox Upload**: Uploads final videos to cloud storage
+- **Zapier Integration**: Automatically schedules content via Buffer
 
 ## API Reference
 
@@ -195,6 +267,8 @@ TokBot/
 - `filter_posts_by_score(posts, min_score=0, max_score=None)`: Filter by post score
 - `filter_posts_by_ratio(posts, min_ratio=0.0)`: Filter by upvote ratio
 - `filter_posts_by_comments(posts, min_comments=0)`: Filter by comment count
+- `filter_posts_by_body_length(posts, min_length=100, max_length=1000)`: Filter by post length
+- `filter_used_posts(posts)`: Filter out already processed posts
 - `print_posts_summary(posts)`: Display formatted post information
 
 ### ImageGenerator Class
@@ -203,6 +277,7 @@ TokBot/
 
 - `add_text_to_image(subreddit, post_title, output_path)`: Create formatted images with Reddit content
 - `load_template()`: Load the template image for formatting
+- `_draw_wrapped_text()`: Draw text with word wrapping
 
 ### VoiceGenerator Class
 
@@ -210,6 +285,23 @@ TokBot/
 
 - `generate_audio(transcript, output_path)`: Convert text to speech using Cartesia TTS
 - `generate_srt_from_timestamps(timestamps_list, output_path)`: Generate SRT subtitle files
+
+### VideoCompiler Class
+
+#### Methods
+
+- `compile_video()`: Compile final video with audio, image, and footage
+- `fetch_footage()`: Download background footage from YouTube
+- `get_wav_duration()`: Get audio duration for video timing
+- `calculate_pic_duration(input_file_path)`: Calculate image display duration based on text length
+
+### SubtitleGenerator
+
+#### Functions
+
+- `add_subtitles(file_path, output_path, max_words=8, max_gap=1.0, initial_position_duration=0.0)`: Add subtitles to video
+- `load_srt(file_path)`: Load and parse SRT subtitle files
+- `group_subtitles(subs, max_words=8, max_gap=1.0)`: Group short subtitles together
 
 ### Dropbox Uploader
 
@@ -237,6 +329,18 @@ TokBot/
 - `VIRAL_MAX_BODY_LENGTH`: Maximum post text length
 - `STORYTELLING_SUBREDDITS`: Comma-separated list of subreddits to monitor
 
+### Subtitle Configuration
+
+- `max_words`: Maximum words per subtitle group (default: 8)
+- `max_gap`: Maximum time gap to group subtitles (default: 1.0 seconds)
+- `initial_position_duration`: Seconds before subtitles move to center (default: 0.0)
+
+### Font Configuration
+
+- `SUBREDDIT_FONT_PATH`: Path to font for subreddit text
+- `TITLE_FONT_PATH`: Path to font for post titles
+- `SUBTITLE_FONT_PATH`: Path to font for subtitles
+
 ## Error Handling
 
 The application includes comprehensive error handling for:
@@ -244,11 +348,13 @@ The application includes comprehensive error handling for:
 - API authentication failures
 - Network request errors
 - File processing errors
+- Video compilation errors
+- Subtitle generation errors
 - TikTok upload failures
 
 ## Rate Limiting
 
-All APIs (Reddit, TikTok, Cartesia) have rate limits. The application respects these limits and includes appropriate error handling.
+All APIs (Reddit, TikTok, Cartesia, YouTube) have rate limits. The application respects these limits and includes appropriate error handling.
 
 ## Dependencies
 
@@ -259,6 +365,12 @@ All APIs (Reddit, TikTok, Cartesia) have rate limits. The application respects t
 - `dropbox>=11.36.0`: Dropbox API integration
 - `gspread>=5.12.0`: Google Sheets API integration
 - `google-auth>=2.23.0`: Google authentication
+- `moviepy>=1.0.3`: Video editing and compilation
+- `yt-dlp>=2023.7.6`: YouTube video downloading
+- `ffmpeg-python>=0.2.0`: Video processing
+- `opencv-python>=4.8.0`: Computer vision and image processing
+- `numpy>=1.24.0`: Numerical computing
+- `tqdm>=4.65.0`: Progress bars
 
 ## License
 

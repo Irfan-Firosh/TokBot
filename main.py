@@ -1,12 +1,12 @@
-from dotenv import load_dotenv
-from helpers.formatRedditpost import ImageGenerator
-
-load_dotenv()
-
-
-def main():
-    imageGenerator = ImageGenerator()
-    imageGenerator.add_text_to_image("askReddit", "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.")
+import dotenv
+from generators.redditGenerator import RedditGenerator
+from helpers.reddit.formatRedditpost import ImageGenerator
+from helpers.video.subtitleGenerator import add_subtitles
+import os
+dotenv.load_dotenv()
 
 if __name__ == "__main__":
-    main()
+    video_file = "output-1mhu024"
+    output_file = "output/compiled_with_subtitles.mp4"
+    
+    add_subtitles(video_file, output_file, max_words=5, max_gap=0.5)

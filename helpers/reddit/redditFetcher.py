@@ -2,7 +2,7 @@ import os
 import requests
 from typing import List, Dict, Optional
 from datetime import datetime
-from helpers.sheetsLogger import SheetsLogger
+from helpers.uploaders.sheetsLogger import SheetsLogger
 
 class RedditPostExtractor:
     """
@@ -204,10 +204,12 @@ class RedditPostExtractor:
         Returns:
             List of high-quality posts meeting all criteria
         """
+        seen_ids = set()
         all_posts = []
         fetch_limit = min(limit * 3, 100)
         max_fetch_attempts = 5
         current_fetch = 0
+        total_fetched = 0
         
         while len(all_posts) < limit and current_fetch < max_fetch_attempts:
             current_fetch += 1
@@ -217,7 +219,8 @@ class RedditPostExtractor:
             if not new_posts:
                 break
             
-            # Apply filters to new posts
+            total_fetched += len(new_posts)
+            
             filtered_posts = self.filter_posts_by_score(new_posts, min_score)
             filtered_posts = self.filter_posts_by_ratio(filtered_posts, min_ratio)
             filtered_posts = self.filter_posts_by_comments(filtered_posts, min_comments)
@@ -225,17 +228,10 @@ class RedditPostExtractor:
             filtered_posts = self.filter_posts_by_nsfw(filtered_posts, False)
             filtered_posts = self.filter_used_posts(filtered_posts)
             
-            # Add new filtered posts to our collection
-            all_posts.extend(filtered_posts)
-            
-            # Remove duplicates based on post ID
-            seen_ids = set()
-            unique_posts = []
-            for post in all_posts:
+            for post in filtered_posts:
                 if post['id'] not in seen_ids:
                     seen_ids.add(post['id'])
-                    unique_posts.append(post)
-            all_posts = unique_posts
+                    all_posts.append(post)
             
             if len(all_posts) >= limit:
                 break
@@ -244,6 +240,8 @@ class RedditPostExtractor:
         
         all_posts.sort(key=lambda x: x.get('score', 0), reverse=True)
         result = all_posts[:limit]
+        
+        print(f"Fetched {total_fetched} total posts, filtered to {len(result)} posts meeting criteria")
         
         return result
     
