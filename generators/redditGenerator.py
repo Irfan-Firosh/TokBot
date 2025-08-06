@@ -10,6 +10,7 @@ from helpers.uploaders.sheetsLogger import SheetsLogger
 from helpers.video.audioHandler import VoiceGenerator
 from helpers.video.videoEditor import VideoCompiler
 from helpers.video.subtitleGenerator import add_subtitles
+from helpers.uploaders.dropboxUploader import DropboxUploader
 import tqdm
 
 
@@ -27,7 +28,7 @@ class RedditGenerator:
         self.VIRAL_TIME_FILTER = os.getenv("VIRAL_TIME_FILTER")
         self.VIRAL_MIN_BODY_LENGTH = int(os.getenv("VIRAL_MIN_BODY_LENGTH"))
         self.VIRAL_MAX_BODY_LENGTH = int(os.getenv("VIRAL_MAX_BODY_LENGTH"))
-
+        self.dropbox_uploader = DropboxUploader()
     def fetch_reddit_posts(self):
         for subreddit in tqdm.tqdm(self.STORYTELLING_SUBREDDITS):
             output_folders = [folder for folder in os.listdir(".") if folder.startswith("output-") and os.path.isdir(folder)]
@@ -61,11 +62,19 @@ class RedditGenerator:
                     video_compiler.compile_video()
                     add_subtitles(folder_path + "/", f"{os.getenv('FINAL_VIDEO_PATH')}reddit-{folder.split('-')[1]}.mp4")
                     compiled_count += 1
+                    self.delete_reddit_files(folder_path)
                 except Exception as e:
                     print(f"Error compiling video for {folder}: {e}")
                     continue
             else:
                 compiled_count += 1
-        
-        
+    
+    def upload_to_tiktok(self):
+        self.dropbox_uploader.batch_upload_files(f"final_vids")
+    
+
+    def delete_reddit_files(self, folder_path: str):
+        for file in os.listdir(folder_path):
+            os.remove(f"{folder_path}/{file}")
+        os.rmdir(folder_path)
         

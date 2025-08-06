@@ -5,7 +5,12 @@ from typing import List
 
 class DropboxUploader:
     def __init__(self, chunk_size_mb=8):
-        self.client = dbx.Dropbox(os.getenv("DROPBOX_ACCESS_TOKEN"))
+
+        self.client = dbx.Dropbox(
+            app_key=os.getenv("DROPBOX_APP_KEY"),
+            app_secret=os.getenv("DROPBOX_APP_SECRET"),
+            oauth2_refresh_token=os.getenv("DROPBOX_REFRESH_TOKEN")
+        )
         self.folder_path = os.getenv("DROPBOX_ROOT_FOLDER")
         self.chunk_size = chunk_size_mb * 1024 * 1024
     
@@ -31,6 +36,6 @@ class DropboxUploader:
                         self.client.files_upload_session_append_v2(f.read(self.chunk_size), cursor)
                         cursor.offset = f.tell()
     
-    def batch_upload_files(self, file_paths: List[str], file_names: List[str]):
-        for file_path, file_name in zip(file_paths, file_names):
-            self.upload_file(file_path, file_name)
+    def batch_upload_files(self, folder_path: str):
+        for file in os.listdir(folder_path):
+            self.upload_file(f"{folder_path}/{file}", file)

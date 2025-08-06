@@ -4,6 +4,7 @@ import random
 from typing import Optional
 import os
 import time
+import concurrent.futures
 
 class YtClipFetcher:
     def __init__(self, output_path: str, url: Optional[str] = None):
@@ -33,8 +34,9 @@ class YtClipFetcher:
         
         for url in urls_to_try:
             try:
-                with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-                    info = ydl.extract_info(url, download=False)
+                with concurrent.futures.ThreadPoolExecutor() as executor:   
+                    future = executor.submit(yt_dlp.YoutubeDL(ydl_opts).extract_info, url, download=False)
+                    info = future.result(timeout=60)
                     video = info['entries'][0] if 'entries' in info else info
                     formats = video.get('formats', [])
                     candidates = [f for f in formats if f.get('ext') == 'mp4' and f.get('height') and f['height'] <= 720 and f.get('url')]

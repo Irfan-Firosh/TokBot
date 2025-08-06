@@ -57,13 +57,13 @@ class ImageGenerator:
             title_font = ImageFont.load_default()
         
         if subreddit_position is None:
-            subreddit_x = 324  # Left edge + padding
-            subreddit_y = (745 + 804) // 2 - 20  # Center of the rectangle
+            subreddit_x = 324
+            subreddit_y = (745 + 804) // 2 - 20
             subreddit_position = (subreddit_x, subreddit_y)
         
         if title_position is None:
-            title_x = 188 + 20  # Left edge + padding
-            title_y = 878  # Top edge + padding
+            title_x = 188 + 20
+            title_y = 878
             title_position = (title_x, title_y)
         
         draw.text(subreddit_position, f"r/{subreddit}", font=subreddit_font, fill=font_color)
