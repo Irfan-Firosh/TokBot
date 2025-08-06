@@ -5,10 +5,8 @@ from typing import List, Optional
 from PIL import Image, ImageDraw, ImageFont
 from helpers.video.videoEditor import VideoCompiler
 import os
-import dotenv
 from moviepy.editor import VideoFileClip, VideoClip
 
-dotenv.load_dotenv()
 
 def draw_rounded_rectangle(draw, bbox, radius, fill):
     x1, y1, x2, y2 = bbox
@@ -216,9 +214,6 @@ def add_subtitles(file_path: str, output_path: str, max_words: int = 8, max_gap:
 
 if __name__ == "__main__":
     video_file = "output-1mhu024"
-    subtitle_file = "/Users/irfanfirosh/Documents/Personal projects/TokBot/output-1mfyuzf/audio.srt"
-    font_file = os.getenv("SUBTITLE_FONT_PATH")
     output_file = "output/compiled_with_subtitles.mp4"
     
-    # Example: subtitles in current position for first 10 seconds, then centered for rest of video
     add_subtitles(video_file, output_file, max_words=5, max_gap=0.5)

@@ -9,6 +9,7 @@ from helpers.reddit.formatRedditpost import ImageGenerator
 from helpers.uploaders.sheetsLogger import SheetsLogger
 from helpers.video.audioHandler import VoiceGenerator
 from helpers.video.videoEditor import VideoCompiler
+from helpers.video.subtitleGenerator import add_subtitles
 import tqdm
 
 
@@ -58,6 +59,7 @@ class RedditGenerator:
                     video_compiler = VideoCompiler(folder_path + "/", compiled_video_path)
                     video_compiler.fetch_footage()
                     video_compiler.compile_video()
+                    add_subtitles(folder_path + "/", f"{os.getenv('FINAL_VIDEO_PATH')}reddit-{folder.split('-')[1]}.mp4")
                     compiled_count += 1
                 except Exception as e:
                     print(f"Error compiling video for {folder}: {e}")
@@ -65,6 +67,5 @@ class RedditGenerator:
             else:
                 compiled_count += 1
         
-
         
         
