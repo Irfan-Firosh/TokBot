@@ -4,11 +4,12 @@ import wave
 from helpers.video.footageFetcher import YtClipFetcher
 import math
 import os
+from typing import Optional
 
 class VideoCompiler:
-    def __init__(self, input_file_path: str, output_path: str):
+    def __init__(self, input_file_path: str, output_path: Optional[str] = None, post_id: Optional[str] = None):
         self.input_file_path = input_file_path
-        self.output_path = output_path
+        self.output_path = output_path if output_path else f"{os.getenv('OUTPUT_PATH')}/reddit_{post_id}.mp4"
 
     def compile_video(self):
         os.makedirs(os.path.dirname(self.output_path), exist_ok=True)

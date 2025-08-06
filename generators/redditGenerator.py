@@ -55,7 +55,6 @@ class RedditGenerator:
             
             if not os.path.exists(compiled_video_path):
                 try:
-                    print(f"Compiling video for: {folder}")
                     video_compiler = VideoCompiler(folder_path + "/", compiled_video_path)
                     video_compiler.fetch_footage()
                     video_compiler.compile_video()
